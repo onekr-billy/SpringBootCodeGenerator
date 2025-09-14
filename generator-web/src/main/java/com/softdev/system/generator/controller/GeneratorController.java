@@ -41,14 +41,6 @@ public class GeneratorController {
     public ModelAndView indexPage() {
         return new ModelAndView("newui2").addObject("value",valueUtil);
     }
-    @GetMapping("/newui2")
-    public ModelAndView newui2() {
-        return new ModelAndView("newui2").addObject("value",valueUtil);
-    }
-    @GetMapping("/main")
-    public ModelAndView mainPage() {
-        return new ModelAndView("main").addObject("value",valueUtil);
-    }
 
     @RequestMapping("/template/all")
     @ResponseBody
@@ -88,7 +80,7 @@ public class GeneratorController {
                 classInfo = generatorService.generateSelectSqlBySQLPraser(paramInfo);
                 break;
             case "create-sql":
-                //SelectSqlBySQLPraser模式:parse select sql by JSqlParser
+                //CreateSqlBySQLPraser模式:parse create sql by JSqlParser
                 classInfo = generatorService.generateCreateSqlBySQLPraser(paramInfo);
                 break;
             default:
