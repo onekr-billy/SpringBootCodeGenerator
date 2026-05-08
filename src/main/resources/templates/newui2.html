@@ -51,9 +51,137 @@
     .last-card {
       margin-bottom: 70px; /* 增加输出代码区域与底部的距离 */
     }
+
+    /* ===== DARK THEME TOGGLE BUTTON ===== */
+    #darkModeBtn {
+      position: fixed;
+      top: 14px;
+      right: 18px;
+      z-index: 9999;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #aaa;
+      background-color: #fff;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    #darkModeBtn:hover {
+      border-color: #555;
+    }
+
+    /* ===== DARK THEME STYLES ===== */
+    body.dark-mode {
+      background-color: #1a1a2e;
+      color: #e0e0e0;
+    }
+    body.dark-mode .header-bar {
+      background-color: #16213e;
+      border-bottom-color: #0f3460;
+    }
+    body.dark-mode .header-bar .logo {
+      color: #e0e0e0;
+    }
+    body.dark-mode .header-bar small {
+      color: #b0b8c8;
+    }
+    body.dark-mode .header-bar .links a {
+      color: #58a6ff;
+    }
+    body.dark-mode .footer-bar {
+      background-color: #16213e;
+      border-top-color: #0f3460;
+      color: #b0b8c8;
+    }
+    body.dark-mode .card {
+      background-color: #1e2a3a;
+      border-color: #2d4a6a;
+      color: #e0e0e0;
+    }
+    body.dark-mode .card-header {
+      background-color: #162032;
+      border-bottom-color: #2d4a6a;
+      color: #e0e0e0;
+    }
+    body.dark-mode .card-title {
+      color: #e0e0e0;
+    }
+    body.dark-mode .card-body {
+      background-color: #1e2a3a;
+      color: #e0e0e0;
+    }
+    body.dark-mode textarea {
+      background-color: #111827;
+      color: #e0e0e0;
+      border-color: #2d4a6a;
+    }
+    body.dark-mode textarea::placeholder {
+      color: #6b7b8f;
+    }
+    body.dark-mode blockquote.quote-secondary {
+      background-color: #162032;
+      border-left-color: #58a6ff;
+      color: #b0b8c8;
+    }
+    body.dark-mode .el-form-item__label {
+      color: #c0cad8 !important;
+    }
+    body.dark-mode .el-input__inner {
+      background-color: #111827 !important;
+      border-color: #2d4a6a !important;
+      color: #e0e0e0 !important;
+    }
+    body.dark-mode .el-select .el-input__inner {
+      background-color: #111827 !important;
+      border-color: #2d4a6a !important;
+      color: #e0e0e0 !important;
+    }
+    body.dark-mode .el-button {
+      background-color: #1e2a3a !important;
+      border-color: #2d4a6a !important;
+      color: #e0e0e0 !important;
+    }
+    body.dark-mode .el-button--primary {
+      background-color: #1a4a7a !important;
+      border-color: #2d6ab0 !important;
+      color: #e0e0e0 !important;
+    }
+    body.dark-mode .el-button--primary.is-plain {
+      background-color: #162032 !important;
+      border-color: #2d4a6a !important;
+      color: #58a6ff !important;
+    }
+    body.dark-mode .el-button--primary.is-plain.is-disabled,
+    body.dark-mode .el-button--primary.is-plain.is-disabled:active,
+    body.dark-mode .el-button--primary.is-plain.is-disabled:focus,
+    body.dark-mode .el-button--primary.is-plain.is-disabled:hover {
+      background-color: #2a3a4a !important;
+      border-color: #3a5a7a !important;
+      color: #8aaabb !important;
+    }
+    body.dark-mode hr {
+      border-color: #2d4a6a;
+    }
+    body.dark-mode .btn-tool {
+      color: #b0b8c8 !important;
+    }
+    body.dark-mode #darkModeBtn {
+      background-color: #1e2a3a;
+      border-color: #58a6ff;
+      color: #e0e0e0;
+    }
   </style>
 </head>
 <body>
+
+<!-- ===== DARK MODE TOGGLE BUTTON ===== -->
+<button id="darkModeBtn" title="切换深色/浅色模式" onclick="toggleDarkMode()">🌙</button>
+
 <div id="app">
   <div class="header-bar">
     <div class="logo">
@@ -255,6 +383,26 @@
   vm.formData.options.returnUtilFailure="${(value.returnUtilFailure)!!}";
   vm.outputStr="${(value.outputStr)!!}";
   loadAllCookie()
+</script>
+
+<!-- ===== DARK MODE SCRIPT ===== -->
+<script>
+  function toggleDarkMode() {
+    var body = document.body;
+    var btn = document.getElementById('darkModeBtn');
+    var isDark = body.classList.toggle('dark-mode');
+    btn.textContent = isDark ? '☀️' : '🌙';
+    localStorage.setItem('darkMode', isDark ? '1' : '0');
+  }
+
+  // Restore preference on page load
+  (function() {
+    if (localStorage.getItem('darkMode') === '1') {
+      document.body.classList.add('dark-mode');
+      var btn = document.getElementById('darkModeBtn');
+      if (btn) btn.textContent = '☀️';
+    }
+  })();
 </script>
 </body>
 </html>
