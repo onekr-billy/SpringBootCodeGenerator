@@ -2,6 +2,7 @@ package com.softdev.system.generator.service;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.softdev.system.generator.entity.dto.ClassInfo;
+import com.softdev.system.generator.entity.dto.CodeGenResult;
 import com.softdev.system.generator.entity.dto.ParamInfo;
 import com.softdev.system.generator.entity.enums.ParserTypeEnum;
 import com.softdev.system.generator.entity.vo.ResultVo;
@@ -356,12 +357,12 @@ class CodeGenServiceTest {
                     .thenReturn("test");
 
             // When
-            Map<String, String> result = codeGenService.getResultByParams(params);
+            CodeGenResult result = codeGenService.getResultByParams(params);
 
             // Then
             assertNotNull(result);
-            assertEquals("test", result.get("tableName"));
-            assertEquals("generated code", result.get("Entity"));
+            assertEquals("test", result.getTableName());
+            assertEquals("generated code", result.getGeneratedCode().get("Entity"));
             verify(templateService).getAllTemplates();
         }
     }
@@ -372,7 +373,7 @@ class CodeGenServiceTest {
         // Given
         Map<String, Object> params = new HashMap<>();
         params.put("tableName", "test");
-        
+
         JSONArray emptyTemplates = new JSONArray();
         com.alibaba.fastjson2.JSONObject parentTemplate = new com.alibaba.fastjson2.JSONObject();
         parentTemplate.put("group", "basic");
@@ -382,11 +383,12 @@ class CodeGenServiceTest {
         when(templateService.getAllTemplates()).thenReturn(emptyTemplates);
 
         // When
-        Map<String, String> result = codeGenService.getResultByParams(params);
+        CodeGenResult result = codeGenService.getResultByParams(params);
 
         // Then
         assertNotNull(result);
-        assertEquals("test", result.get("tableName"));
+        assertEquals("test", result.getTableName());
+        assertEquals("test", result.getGeneratedCode().get("tableName"));
         verify(templateService).getAllTemplates();
     }
 

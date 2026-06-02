@@ -1,9 +1,12 @@
 package com.softdev.system.generator.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softdev.system.generator.entity.dto.ClassInfo;
+import com.softdev.system.generator.entity.dto.CodeGenResult;
 import com.softdev.system.generator.entity.dto.ParamInfo;
 import com.softdev.system.generator.entity.vo.ResultVo;
 import com.softdev.system.generator.service.CodeGenService;
+import com.softdev.system.generator.service.ZipService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,9 +17,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -35,6 +40,9 @@ class CodeGenControllerTest {
 
     @MockitoBean
     private CodeGenService codeGenService;
+
+    @MockitoBean
+    private ZipService zipService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -204,7 +212,7 @@ class CodeGenControllerTest {
         complexOptions.put("author", "Test Author");
         complexOptions.put("tablePrefix", "t_");
         paramInfo.setOptions(complexOptions);
-        
+
         when(codeGenService.generateCode(any(ParamInfo.class))).thenReturn(successResult);
 
         // When & Then
@@ -214,5 +222,64 @@ class CodeGenControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data").exists());
+    }
+
+    // =====================================================
+    // ZIP 下载接口测试
+    // =====================================================
+
+    @Test
+    @DisplayName("测试 ZIP 下载接口成功返回二进制流")
+    void testGenerateZipSuccess() throws Exception {
+        // Given
+        ClassInfo classInfo = new ClassInfo();
+        classInfo.setClassName("UserInfo");
+        classInfo.setTableName("t_user_info");
+
+        Map<String, String> generated = new LinkedHashMap<>();
+        generated.put("controller", "public class UserInfoController {}");
+        generated.put("model", "public class UserInfo {}");
+
+        Map<String, String> fileNameTpl = new HashMap<>();
+        fileNameTpl.put("controller", "${className}Controller.java");
+        fileNameTpl.put("model", "${className}.java");
+
+        Map<String, String> group = new HashMap<>();
+        group.put("controller", "mybatis");
+        group.put("model", "mybatis");
+
+        CodeGenResult result = CodeGenResult.builder()
+                .className("UserInfo")
+                .tableName("t_user_info")
+                .generatedCode(generated)
+                .fileNameTemplates(fileNameTpl)
+                .groupByTemplate(group)
+                .build();
+
+        when(codeGenService.parseTableStructure(any(ParamInfo.class))).thenReturn(classInfo);
+        when(codeGenService.getResultByParams(any(Map.class))).thenReturn(result);
+        when(zipService.buildZip(any(Map.class), any(Map.class), any(Map.class), anyString(), any(Map.class)))
+                .thenReturn("PK".getBytes());
+
+        // When & Then
+        mockMvc.perform(post("/code/generate-zip")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(paramInfo)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/zip"))
+                .andExpect(header().exists("Content-Disposition"));
+    }
+
+    @Test
+    @DisplayName("测试 ZIP 下载接口：tableSql 为空时返回 400")
+    void testGenerateZipWithEmptyTableSql() throws Exception {
+        // Given
+        paramInfo.setTableSql("");
+
+        // When & Then
+        mockMvc.perform(post("/code/generate-zip")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(paramInfo)))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -151,6 +151,54 @@ const vm = new Vue({
 		},
 		copy : function (){
 			navigator.clipboard.writeText(vm.outputStr.trim()).then(r => {alert("已复制")});
+		},
+		//download all generated code as ZIP
+		downloadZip : function (){
+			//get value from codemirror
+			vm.formData.tableSql=$.inputArea.getValue();
+			if(!vm.formData.tableSql || vm.formData.tableSql.trim().length<5){
+				error("请先输入 SQL/JSON/INSERT 语句");
+				return;
+			}
+			// 用 axios 发起请求，responseType: 'blob' 让浏览器把响应当作二进制流处理
+			axios.post(basePath+"/code/generate-zip", vm.formData, {responseType: 'blob', timeout: 60000})
+				.then(function(res){
+					if(res.status !== 200){
+						error("下载失败，HTTP 状态码："+res.status);
+						return;
+					}
+					//尝试从 Content-Disposition 中解析文件名
+					var dispo = res.headers && (res.headers['content-disposition'] || res.headers['Content-Disposition']);
+					var fileName = "code-generator.zip";
+					if(dispo){
+						var matchStar = /filename\*=UTF-8''([^;]+)/i.exec(dispo);
+						var matchQuoted = /filename="?([^";]+)"?/i.exec(dispo);
+						if(matchStar && matchStar[1]){
+							fileName = decodeURIComponent(matchStar[1]);
+						}else if(matchQuoted && matchQuoted[1]){
+							fileName = matchQuoted[1];
+						}
+					}
+					// 创建 Blob 并触发浏览器下载
+					var blob = new Blob([res.data], {type: 'application/zip'});
+					if(window.navigator && window.navigator.msSaveBlob){
+						window.navigator.msSaveBlob(blob, fileName);
+					}else{
+						var url = window.URL.createObjectURL(blob);
+						var a = document.createElement('a');
+						a.href = url;
+						a.download = fileName;
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						window.URL.revokeObjectURL(url);
+					}
+					alert("已下载："+fileName);
+				})
+				.catch(function(err){
+					console.error(err);
+					error("下载失败："+(err && err.message ? err.message : '未知错误'));
+				});
 		}
 	},
 	created: function () {
